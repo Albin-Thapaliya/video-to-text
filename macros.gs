@@ -31,4 +31,12 @@ function processRowData(row) {
 }
 
 function transcribeVideo(values, rowIndex) {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getActiveSheet();
+  var videoUrl = values[0]; 
+  var name = values[1];
+  var timestamp = values.length > 2 ? values[2] : ''; 
+
+Logger.log("Testing output: " + spreadsheet + "," + sheet + "," + videoUrl + "," + name + "," + timestamp);
+
 }
