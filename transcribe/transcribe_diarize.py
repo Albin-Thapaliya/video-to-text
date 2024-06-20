@@ -11,6 +11,21 @@ def trim_or_pad(audio, target_length=30, sample_rate=16000):
         return audio[:trim_length]
     return audio
 
+def transcribe(audio_name, audio_path):
+    model = whisper.load_model("base")
+    audio = whisper.load_audio(audio_path)
+    audio = trim_or_pad(audio)
+
+    mel = whisper.log_mel_spectrogram(audio).to(model.device)
+
+    _, probs = model.detect_language(mel)
+    detected_language = max(probs, key=probs.get)
+    print(f"Detected language: {detected_language}")
+
+    options = whisper.DecodingOptions()
+    result = model.decode(mel, options=options)
+    print(result.text)
+
 if __name__ == "__main__":
     audio_name = "test"
     audio_path = ""
