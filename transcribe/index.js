@@ -25,18 +25,19 @@ app.post('/transcribe', async (req, res) => {
   const safeName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const audioPath = path.join(downloadsDir, `${safeName}.mp3`);
   const trimmedAudioPath = path.join(downloadsDir, `${safeName}_trimmed.mp3`);
-    const stream = ytdl(url, { quality: 'highestaudio', format: 'mp3' })
+    
+  const stream = ytdl(url, { quality: 'highestaudio', format: 'mp3' })
       .pipe(fs.createWriteStream(audioPath));
-    stream.on('finish', () => {
+  stream.on('finish', () => {
       if (timestamp) {
-          trimAudio((error) => {
+          trimAudio(audioPath, trimmedAudioPath, timestamp, (error) => {
               if (error) {
                   return res.status(500).send(`Error during audio trimming: ${error}`);
               }
-              processAudio();
+              processAudio(trimmedAudioPath, res);
           });
       } else {
-          processAudio();
+          processAudio(name,audioPath, res);
       }
   })
   .on('error', error => {
@@ -45,9 +46,17 @@ app.post('/transcribe', async (req, res) => {
 });
 
 function trimAudio() {
+
 }
 
-function processAudio() {
+function processAudio(audioName,audioPath, res) {
+    exec(`python transcribe_diarize.py "${audioName}" "${audioPath}"`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error during transcription: ${error}`);
+            return res.status(500).send(stderr);
+        }
+        res.send(stdout);
+    });
 }
 
 app.listen(PORT, async () => {
