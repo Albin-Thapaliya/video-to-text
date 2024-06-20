@@ -18,21 +18,37 @@ const PORT = 3000;
 const downloadsDir = path.resolve(__dirname, 'public');
 if (!fs.existsSync(downloadsDir)){
     fs.mkdirSync(downloadsDir, { recursive: true });
-    console.log('Download directory created:', downloadsDir);
 }
 
 app.post('/transcribe', async (req, res) => {
-  console.log('Received transcription request:', req.body);
   const { url, name, timestamp } = req.body;
   const safeName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
   const audioPath = path.join(downloadsDir, `${safeName}.mp3`);
   const trimmedAudioPath = path.join(downloadsDir, `${safeName}_trimmed.mp3`);
-
-  console.log(`Starting download for ${url}...`);
-
+    const stream = ytdl(url, { quality: 'highestaudio', format: 'mp3' })
+      .pipe(fs.createWriteStream(audioPath));
+    stream.on('finish', () => {
+      if (timestamp) {
+          trimAudio((error) => {
+              if (error) {
+                  return res.status(500).send(`Error during audio trimming: ${error}`);
+              }
+              processAudio();
+          });
+      } else {
+          processAudio();
+      }
+  })
+  .on('error', error => {
+      res.status(500).send('Failed to download audio from YouTube.');
+  });
 });
 
+function trimAudio() {
+}
 
+function processAudio() {
+}
 
 app.listen(PORT, async () => {
   console.log(`Server is running on http://localhost:${PORT}`);
