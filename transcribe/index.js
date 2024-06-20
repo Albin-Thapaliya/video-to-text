@@ -45,8 +45,21 @@ app.post('/transcribe', async (req, res) => {
   });
 });
 
-function trimAudio() {
-
+function trimAudio(sourcePath, targetPath, timestamp, callback) {
+const [start, duration] = timestamp.split('-');
+ffmpeg(sourcePath)
+    .setStartTime(start)
+    .duration(duration)
+    .output(targetPath)
+    .on('end', function() {
+        console.log(`Trimming finished for: ${targetPath}`);
+        callback(null);
+    })
+    .on('error', function(err) {
+        console.log(`Error during trimming for: ${targetPath}`, err);
+        callback(err);
+    })
+    .run();
 }
 
 function processAudio(audioName,audioPath, res) {
